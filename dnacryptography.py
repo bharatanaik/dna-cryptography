@@ -90,11 +90,6 @@ class Utils:
         regex = "%s(.*?)%s" % (delimiter, delimiter)
         return re.findall(regex, s)
 
-class Encryption(Utils):
-    def __init__(self)->None:
-        self.rounds_no = random.randrange(3, 12, 2)
-        self.decryption_key = ""
-
     def encrypt_key(self, data, key):
         """
         Encrypt data with key: data XOR key.
@@ -105,7 +100,32 @@ class Encryption(Utils):
             key += key * factor
             return self.bitxor(data, key)
         return self.bitxor(data, key)
+    
+    def complement(self, chromosome, point1, point2):
+        """
+        Flip chromosome bits between point1 and point2.
+        """
+        new_chromosome = ""
 
+        for i in range(len(chromosome)):
+            if i >= point1 and i <= point2:
+                if chromosome[i] == '0':
+                    new_chromosome += '1'
+                else:
+                    new_chromosome += '0'
+            else:
+                new_chromosome += chromosome[i]
+
+        return new_chromosome
+    
+    def reverse_reshape(self, population):
+        # convert the chromosome population back to DNA sequence
+        return "".join(population)
+
+class Encryption(Utils):
+    def __init__(self)->None:
+        self.rounds_no = random.randrange(3, 12, 2)
+        self.decryption_key = ""
 
     def reshape(self, dna_sequence):
         """
@@ -124,10 +144,6 @@ class Encryption(Utils):
             chromosomes.append(dna_sequence[i:i + self.chromosome_length])
         return chromosomes
 
-    def reverse_reshape(self, population):
-        # convert the chromosome population back to DNA sequence
-        return "".join(population)
-    
     def rotate_crossover(self, population):
         """
         Rotate every chromosome in population left / right according to probability p.
@@ -191,24 +207,7 @@ class Encryption(Utils):
             self.decryption_key += self.crossover_type_del + "both" + self.crossover_type_del
             population = self.rotate_crossover(population)
             return self.single_point_crossover(population)
-
-    def complement(self, chromosome, point1, point2):
-        """
-        Flip chromosome bits between point1 and point2.
-        """
-        new_chromosome = ""
-
-        for i in range(len(chromosome)):
-            if i >= point1 and i <= point2:
-                if chromosome[i] == '0':
-                    new_chromosome += '1'
-                else:
-                    new_chromosome += '0'
-            else:
-                new_chromosome += chromosome[i]
-
-        return new_chromosome
-
+ 
     def alter_dna_bases(self, bases:list):
         """
         Alter DNA bases to another one randomly.(e.g. C->G and A->T and viceversa)
@@ -229,7 +228,6 @@ class Encryption(Utils):
             alter_dna_table[base2] = base1
 
         return alter_dna_table
-
 
     def mutation(self, population):
         """
@@ -286,8 +284,6 @@ class Encryption(Utils):
 
         return new_population
     
-
-
     def dna_get(self, text, key):
         b_data1 = self.binarized_data(text)
         dna_seq = self.bits_to_dna(b_data1, self.two_bits_to_dna_base_table)
@@ -314,7 +310,6 @@ class Encryption(Utils):
             self.decryption_key += self.round_del
         return self.reverse_reshape(b_data2)
     
-
     def encrypt(self, text:str):
         key = self.str2bin(''.join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(16)))
 
@@ -324,23 +319,10 @@ class Encryption(Utils):
         self.generate_pre_processing_tables()
         self.generate_mutation_tables()
         encrypted_text = self.dna_get(text, key)
-
         return encrypted_text, self.decryption_key
 
 
-
 class Decryption(Utils):
-    def encrypt_key(self, data, key):
-        """
-        Encrypt data with key: data XOR key.
-        """
-        # repeat key ONLY if data is longer than key and encrypt
-        if len(data) > len(key):
-            factor = int(len(data) / len(key))
-            key += key * factor
-            return self.bitxor(data, key)
-        return self.bitxor(data, key)
-
 
     def reshape(self, dna_sequence, reshape_info):
         """
@@ -355,12 +337,6 @@ class Decryption(Utils):
         for i in range(0, len(dna_sequence), chromosome_length):
             chromosomes.append(dna_sequence[i:i + chromosome_length])
         return chromosomes
-
-
-    def reverse_reshape(self, population):
-        # convert the chromosome population back to DNA sequence
-        return "".join(population)
-
 
     def rotate_crossover(self, population, rotate_info):
         """
@@ -385,7 +361,6 @@ class Decryption(Utils):
                 new_population.append(left_second + left_first)
         return new_population
 
-
     def single_point_crossover(self, population, single_point_info):
         """
         Combine each two chromosomes in population by using single point crossover.
@@ -408,7 +383,6 @@ class Decryption(Utils):
 
         return new_population
 
-
     def crossover(self, population, crossover_info):
         # get the crossover type
         crossover_type = self.get_pattern(self.crossover_type_del, crossover_info)[0]
@@ -424,25 +398,6 @@ class Decryption(Utils):
             single_point_info = self.get_pattern(self.single_point_crossover_del, crossover_info)[0]
             population = self.single_point_crossover(population, single_point_info)
             return self.rotate_crossover(population, rotate_info)
-
-
-    def complement(self, chromosome, point1, point2):
-        """
-        Flip chromosome bits between point1 and point2.
-        """
-        new_chromosome = ""
-
-        for i in range(len(chromosome)):
-            if i >= point1 and i <= point2:
-                if chromosome[i] == '0':
-                    new_chromosome += '1'
-                else:
-                    new_chromosome += '0'
-            else:
-                new_chromosome += chromosome[i]
-
-        return new_chromosome
-
 
     def mutation(self, population, mutation_info):
         """
@@ -494,7 +449,6 @@ class Decryption(Utils):
 
         return new_population
 
-
     def dna_gdt(self, text, key):
 
         rounds_no = int(self.get_pattern(self.no_rounds_del, key)[0])
@@ -505,32 +459,30 @@ class Decryption(Utils):
         # run the algorithm "rounds_no" times
         while rounds_no > 0:
             round_info = rounds[rounds_no - 1]
-
             # create the chromosome population
             b_data = self.reshape(b_data, self.get_pattern(self.reshape_del, round_info))
-            # print("Population data:", b_data)
-
             # apply mutation on population
             b_data = self.mutation(b_data, self.get_pattern(self.mutation_del, round_info))
-            # print("Population data:", b_data)
-
             # apply crossover on population
             b_data = self.crossover(b_data, round_info)
-            # print("Population data:", b_data)
-
             # decrypt data with key after reshaping it back to binary sequence and then convert it back to dna sequence
             # where decrypt = encrypt(encrypt(data, key), key) and encrypt => xor operation, because (a xor b) xor b = a
             encryption_key = self.get_pattern(self.key_del, key)[0]
             b_data = self.bits_to_dna(
-                self.group_bits(
-                    self.encrypt_key(self.dna_to_bits(self.reverse_reshape(b_data), self.dna_base_to_two_bits_table), encryption_key)),
-                self.two_bits_to_dna_base_table)
-            # print("Decrypted data:", b_data)
-
+                        self.group_bits(
+                            self.encrypt_key(
+                                self.dna_to_bits(
+                                    self.reverse_reshape(b_data), 
+                                    self.dna_base_to_two_bits_table
+                                ), 
+                                encryption_key
+                            )
+                        ),
+                        self.two_bits_to_dna_base_table
+                    )
             rounds_no -= 1
 
         return self.bin2str(self.dna_to_bits(b_data, self.dna_base_to_two_bits_table)).decode()
-
 
     def decrypt(self, encrypted_text:str, key:str):
         self.generate_pre_processing_tables()
